@@ -1,20 +1,13 @@
-### GR5243 Spring 2019 Applied Data Science
-### Project 2 Shiny App Development (V 2.0)
-### --- App Improvement
+### GR5243 Spring 2018 Applied Data Science
+### Project 2 Shiny App Development
+### - for [data.gov](https://www.data.gov/) open data
 
-In this project, working in teams, you will study a collection of R shiny apps previously developed by your peers to create an **improved** new app that is better, faster or more interesting. It should still be designed for exploring and visualizing a topic about New York City or United States using [NYC Open Data](https://opendata.cityofnewyork.us/) or [data.gov](https://www.data.gov/). 
+In this project, working in teams, you will create a `R` shiny app for exploring and visualizing a topic about United States using open data from [data.gov](https://www.data.gov/). 
 
 ### Challenge
+For this project, I invite you to browse 193,990 datasets available on data.gov (https://www.data.gov/) about United States and choose a topic that interests you. A number of web applications using open data from data.gov can be found at <https://www.data.gov/applications>. You can recreate, extend and improve some of these applications' functionality or create something entirely from scratch. 
 
-For this project, we invite you to study a set of R/Shiny apps that were previously developed by students in ADS using either New York City's [Open Data](https://opendata.cityofnewyork.us/) or datasets available on [data.gov](https://www.data.gov/) about United States. 
-
-Each team will be given a set of apps that used a common data source (will be posted in Piazza). These previous R/Shiny apps may have focused on different angles of the same data sets but often have similar functionalities. 
-
-Your **challenge** is to study them and create an improved version 2.0 app that integrates what you think are good about these apps and potential improvements. 
-
-A number of web applications using open data from data.gov can be found at <https://www.data.gov/applications>. You can recreate, extend and improve some of these applications' functionality or create something entirely from scratch. 
-
-For presentation, the team should present their **shiny app** as a *product version 2.0 release demo* and interesting findings from their experience. All shiny apps are required to be deployed (either on <http://www.shinyapps.io/> or your own Shiny server). 
+For presentation, the team should present their **shiny app** as a *product demo* and interesting findings from their experience. All shiny apps are required to be deployed (either on <http://www.shinyapps.io/> or your own Shiny server). 
 
 All developments need to be carried out in group shared private repo on [https://www.github.com/TZstatsADS/] with clear project management log, taking advantage of GitHub issues. 
 
@@ -25,37 +18,36 @@ Each week, we will give a tutorial in class and having live discussion and brain
 - week 3: [TBD] depends on topics emerge from online and in-class discussions.
 
 #### Evaluation criteria 
-+ Value added of the improved app
-	+ Has it created more functionality?
-	+ Is it easier to use? Is it faster?
-	+ Does it display information more clearly?
-	+ Can it be used to answer *new* questions or exploring for *new* interesting trends?
-	+ [optional] are new data source integrated into this improved app?
-+ Implementation of the app 
-	+ are the data processed/integrated properly?
-	+ are necessary measures taken into account for data 	collection issues such as biases, missing values, etc?
-+ Visualization
-	+ Is the information visualized clearly?
-	+ Is the visualization easy to understand?
-+ Presentation and organization
-	+ Is the presentation convincing about the business value added of the improved apps?
-	+ Is the GitHub organized and prepared in a way that makes it easier for readers to appreciate the value of the app and understand how to use the app?
-	
+- Business values of information presented 
+	* is it of importance?
+	* is it interesting?
+	* can it be used to answer questions or exploring for interesting trends?
+- Implementation of the apps
+	* are the data processed properly?
+	* are necessary measures taken to account for data collection issues such as biases, missing values, etc?
+- Visualization
+	* Is the information visualized clearly?
+	* Is the visualization easy to understand?
+- Presentation and organization
+	* Is the presentation convincing about the business value of the apps?
+	* Is the GitHub organized and prepared in a way that makes it easier for readers to appreciate the value of the app and understand how to use the app?
+
 *(More details will be posted as grading rubrics in courseoworks/canvas)*
 
 ### Suggested team workflow
-1. [wk1] Week 1 is the **studying & planning** week. Study previous apps assigned to you, read project description, data description, browse data and brainstorm for ideas.
-2. [wk1] Each team is strongly recommended to demonstrate project progress by posting a project plan with task assignments as issues on GitHub by Feb 13rd. 
-3. [wk1] As a team, study the assigned apps together (not necessarily face-to-face). During the discussion, discuss a number of key analyses/functionalities carefully and discuss possible improvements.
-     * "What information is of value or interesting?"
+1. [wk1] Week 1 is the **planning** week. Read data description and browse data. 
+2. [wk1] Each team is strongly recommended to demonstrate project progress by posting a project plan with task assignments as issues on GitHub by Feb 7th. 
+3. [wk1] As a team, read the example blog posts, projects from [Spring 2016](http://tzstatsads.github.io//2016/09/21/Spr2016Project2-summary.html) and [Fall 2016](http://tzstatsads.github.io//2016/11/09/Fal-l2016-Project2-Summary.html) on NYC open data, or other interesting analyses found online together (not necessarily face-to-face). During the discussion, study a number of analyses carefully on the techniques and computational packages used.
+	 * "What information is of value or interesting?"
      * "Which analysis/visualization is particularly informative?" 
      * Good visualizations do not just look cool. They should be easy to understand and give the correct impression about data. 
-4. [wk2] Based on outcomes from week 1 brainstorm sessions, identify additional data processing and modeling needed (start early on this one!)
+4. [wk1] As a team, brainstorm about possible topics 
+5. [wk2] Based on outcomes from week 1 brainstorm sessions, identify the dataset(s) to download and start data cleaning (start early on this one!)
 6. [wk2] Week 2 is the **design and development** week. Start learning and using the shiny library to do simple things. Some team members may know more about shiny than others. Share and learn together. 
-7. [wk2] It is ok to have 2-3 leads to explore at the beginning of week 2 but it is better to converge on a single direction by the end of week 2 (Feb 20).
+7. [wk2] It is ok to have 2-3 leads to explore  at the beginning of week 2 but it is better to converge on a single topic by the end of week 2 (2/14).
 8. [wk2] Construction of shiny platform can start early using fake/simulated data. 
-9. [wk3] Week 3 is the shiny app version 2.0 **implementation/production/testing** week. By Feb 20 (the beginning of week 3), you should have all necessary data processing done and a project idea. 
-10. [wk3] By Feb 20, You should layout a to-do list (as a 2nd set of GitHub issues) for the app production and divide up tasks. At the session on Feb 20, team members should work together and resolve any ambiguity about which team member should be doing what for the final stage of production of the app. 
+9. [wk3] Week 3 is the shiny app **implementation/production/testing** week. By 2/14 (the beginning of week 3), you should have a cleaned set of data and a project idea. 
+10. [wk3] By 2/14, You should layout a to-do list (as a 2nd set of GitHub issues) for the app production and divide up tasks. At the session on 2/14, team members should work together and resolve any ambiguity about which team member should be doing what for the final stage of production of the app. 
 
 ### Working together
 - Setup a GitHub project folder from joining the GitHub classroom link with everyone listed as contributors. Everyone clones the project locally via your GitHub desktop and create a local branch. 
@@ -76,8 +68,6 @@ Blogs
 - [spatial.ly](http://spatial.ly/blog/) Website of Dr. James Cheshire, a geographer on spatial visualizations that tell stories.
 - [NYC taxi data](http://www.andresmh.com/nyctaxitrips/), some [exploration](http://hafen.github.io/taxi/#initial-exploration), a cool [visualization](http://nyctaxi.herokuapp.com/).
 - [Winners of New York City Tree Counts DataJam](http://treescountdatajam.devpost.com/updates/5503-and-the-winners-are)
-- [Vision Zero Interactive Map](http://www.nycvzv.info/)
-- [Wind Map](http://hint.fm/wind/)
 
 News articles:
 <ul>

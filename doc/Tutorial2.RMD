@@ -1,29 +1,16 @@
 ---
 title: 'Tutorial 2: EDAV using shiny'
 author: "Tian Zheng"
-date: "September 18, 2018"
-output:
-  slidy_presentation: default
-  ioslides_presentation: default
+date: "February 3, 2017"
+output: ioslides_presentation
 ---
-
-## Set gloabl options
-```{r global_options, include=T}
-knitr::opts_chunk$set(fig.width=12, fig.height=8, fig.path='figs/',
-                      echo=T, warning=FALSE, message=FALSE)
-```
 
 ## Load the data manipulation libraries
 
 ```{r load_libs, message=F}
 if (!require("DT")) install.packages('DT')
 if (!require("dtplyr")) install.packages('dtplyr')
-if (!require("lubridate")) install.packages('lubridate')
-if (!require("ggmap")) install.packages('ggmap')
-if (!require("choroplethrZip")) {
-  # install.packages("devtools")
-  library(devtools)
-  install_github('arilamstein/choroplethrZip@v1.5.0')}
+if(!require("lubridate")) install.packages('lubridate')
 
 library(dtplyr)
 library(dplyr)
@@ -84,7 +71,7 @@ if (!require("ggmap")) devtools::install_github("dkahle/ggmap")
 ```
 
 ## 2009 Manhattan housing sales
-```{r code_plot_housing_sales, message=F, eval=T}
+```{r code_plot_housing_sales, message=F, eval=F}
 library(choroplethrZip)
 zip_choropleth(count.df,
     title       = "2009 Manhattan housing sales",
@@ -99,21 +86,16 @@ library(ggmap)
 library(dplyr)
 mh2009.selgeo=
   mh2009%>%
-  sample_n(100)%>%
+  sample_n(10)%>%
   select(starts_with("ADD"))%>%
   mutate(ADDRESS_Ext=paste(ADDRESS, "New York, NY", sep=","))%>%
   mutate_geocode(ADDRESS_Ext)
-
-mh2009.selgeo=mh2009.selgeo%>%
-  na.omit()
 ```
 
 ## Plot using longitude and latitude
-```{r code_plot_indiv, message=F, eval=T}
+```{r code_plot_indiv, message=F, eval=F}
 library(ggmap)
-ggmap(get_map("Manhattan",source="google", 
-              maptype = "hybrid",
-              zoom=12, color = "bw")) + 
+ggmap(get_map("New York, New York",zoom=11,color = "bw")) + 
   geom_point(data=mh2009.selgeo, aes(x=lon,y=lat),  color='red') 
 ```
 

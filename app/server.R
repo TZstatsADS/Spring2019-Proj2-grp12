@@ -1,168 +1,226 @@
 library(shiny)
-library(choroplethr)
-library(choroplethrZip)
-library(dplyr)
 library(leaflet)
+library(scales)
+library(lattice)
+library(tidyverse)
+library(htmltools)
 library(maps)
-library(rgdal)
+library(plotly)
+library(data.table)
+library(dtplyr)
+library(mapproj)
+library(randomForest)
+library(ggplot2)
+library(rpart)
+library(plyr)
+library(choroplethr)
+library(shinydashboard)
 
-## Define Manhattan's neighborhood
-man.nbhd=c("all neighborhoods", "Central Harlem", 
-           "Chelsea and Clinton",
-           "East Harlem", 
-           "Gramercy Park and Murray Hill",
-           "Greenwich Village and Soho", 
-           "Lower Manhattan",
-           "Lower East Side", 
-           "Upper East Side", 
-           "Upper West Side",
-           "Inwood and Washington Heights")
-zip.nbhd=as.list(1:length(man.nbhd))
-zip.nbhd[[1]]=as.character(c(10026, 10027, 10030, 10037, 10039))
-zip.nbhd[[2]]=as.character(c(10001, 10011, 10018, 10019, 10020))
-zip.nbhd[[3]]=as.character(c(10036, 10029, 10035))
-zip.nbhd[[4]]=as.character(c(10010, 10016, 10017, 10022))
-zip.nbhd[[5]]=as.character(c(10012, 10013, 10014))
-zip.nbhd[[6]]=as.character(c(10004, 10005, 10006, 10007, 10038, 10280))
-zip.nbhd[[7]]=as.character(c(10002, 10003, 10009))
-zip.nbhd[[8]]=as.character(c(10021, 10028, 10044, 10065, 10075, 10128))
-zip.nbhd[[9]]=as.character(c(10023, 10024, 10025))
-zip.nbhd[[10]]=as.character(c(10031, 10032, 10033, 10034, 10040))
+calScore <- function(row,care.vec){
+  # weight suggested for 7 criterion
+  origin.weight <- c(11,11,11,11,2,2,2) 
+  # care weight for 7 criterion
+  care.weight <- origin.weight*care.vec/sum(origin.weight*care.vec)
+  # hospital scores for 7 criterion
+  criterion.score <- as.numeric(c(row[row[32:38]]))
+  
+  temp <- ifelse(is.na(criterion.score),0,care.weight)
+  update.weight <- temp/sum(temp)
+  
+  score <- update.weight*criterion.score
+  return(sum(score,na.rm = TRUE))
+}
 
-## Load housing data
-load("../output/count.RData")
-load("../output/mh2009use.RData")
+# switch payment to dollar signs
 
-# Define server logic required to draw a histogram
-shinyServer(function(input, output) {
+payswitch <- function(payment){
+  if(is.na(payment)) {return("Not Avaliable")}
+  else {if(payment<=4328) {return("$")}
+    else{if(payment<=5837) {return("$$")}
+      else{if(payment<=8383) {return("$$$")}
+        else{return("$$$$")}}}}
+}
+
+# switch overall rating
+
+orswitch <- function(rating){
+  if(is.na(rating)){return("Not Available")}
+  else {return(as.numeric(rating))}
+}
+
+#####load##########
+load("./hos.RData")
+load("./importance.RData")
+load("./df.RData")
+load("./hospital_ratings.RData")
+load("./plot1data.RData")
+load("./f.RData")
+#####server#########
+shinyServer <- function(input, output) {
   
-  ## Neighborhood name
-  output$text = renderText({"Selected:"})
-  output$text1 = renderText({
-      paste("{ ", man.nbhd[as.numeric(input$nbhd)+1], " }")
-  })
-  
-  ## Panel 1: summary plots of time trends, 
-  ##          unit price and full price of sales. 
-  
-  output$distPlot <- renderPlot({
-    
-    ## First filter data for selected neighborhood
-    mh2009.sel=mh2009.use
-    if(input$nbhd>0){
-      mh2009.sel=mh2009.use%>%
-                  filter(region %in% zip.nbhd[[as.numeric(input$nbhd)]])
+##########plot 1##########
+  output$HosNumByState <- renderPlotly({
+    c <- ggplot(HosNumByState, aes(x = State, y = Freq)) +
+      geom_bar(stat = "identity", aes(fill = HosNumByState$Freq)) +
+      labs(title = "Hospital Number by State", x = "State", y = NULL) +
+      theme_classic()+
+      theme(axis.text.x = element_text(angle = 90, size = 8)) +
+      theme(plot.title = element_text(hjust = 0.5, vjust = 1)) +
+      scale_y_continuous(expand = c(0,0)) +
+      theme(plot.margin = unit(c(1,1,1,1), "cm"))
+    ggplotly(c) %>% layout(height = 700, width = 1000)
+    c + scale_fill_continuous(name = "Frequency")
+  }
+  )
+
+  ##############plot2################
+  output$map <- renderPlotly({
+    library(shiny)
+    library(plotly)  
+    library(dplyr)
+    library(plyr)
+    library(choroplethr)
+    myFunction <- function(hospital, topic) {
+      output <- hospital %>%
+        filter(sub %in% as.vector(topic)) %>%
+        ddply(.(Provider.State), summarise, 
+              expected_cost = 
+                sum(as.vector(as.numeric(Total.Discharges)) * (as.vector(as.numeric(Average.Covered.Charges)) +
+                                                                 as.vector(as.numeric(Average.Total.Payments)))) / 
+                sum(as.vector(as.numeric(Total.Discharges)))) %>%
+        select(Provider.State, expected_cost)
+      return(output)
     }
-    
-    ## Monthly counts
-    month.v=as.vector(table(mh2009.sel$sale.month))
-    
-    ## Price: unit (per sq. ft.) and full
-    type.price=data.frame(bldg.type=c("10", "13", "25", "28"))
-    type.price.sel=mh2009.sel%>%
-                group_by(bldg.type)%>%
-                summarise(
-                  price.mean=mean(sale.price, na.rm=T),
-                  price.median=median(sale.price, na.rm=T),
-                  unit.mean=mean(unit.price, na.rm=T),
-                  unit.median=median(unit.price, na.rm=T),
-                  sale.n=n()
-                )
-    type.price=left_join(type.price, type.price.sel, by="bldg.type")
-    
-    ## Making the plots
-    layout(matrix(c(1,1,1,1,2,2,3,3,2,2,3,3), 3, 4, byrow=T))
-    par(cex.axis=1.3, cex.lab=1.5, 
-        font.axis=2, font.lab=2, col.axis="dark gray", bty="n")
-    
-    ### Sales monthly counts
-    plot(1:12, month.v, xlab="Months", ylab="Total sales", 
-         type="b", pch=21, col="black", bg="red", 
-         cex=2, lwd=2, ylim=c(0, max(month.v,na.rm=T)*1.05))
-    
-    ### Price per square foot
-    plot(c(0, max(type.price[,c(4,5)], na.rm=T)), 
-         c(0,5), 
-         xlab="Price per square foot", ylab="", 
-         bty="l", type="n")
-    text(rep(0, 4), 1:4+0.5, paste(c("coops", "condos", "luxury hotels", "comm. condos"), 
-                                  type.price$sale.n, sep=": "), adj=0, cex=1.5)
-    points(type.price$unit.mean, 1:nrow(type.price), pch=16, col=2, cex=2)
-    points(type.price$unit.median, 1:nrow(type.price),  pch=16, col=4, cex=2)
-    segments(type.price$unit.mean, 1:nrow(type.price), 
-              type.price$unit.median, 1:nrow(type.price),
-             lwd=2)    
-    
-    ### full price
-    plot(c(0, max(type.price[,-1], na.rm=T)), 
-         c(0,5), 
-         xlab="Sales Price", ylab="", 
-         bty="l", type="n")
-    text(rep(0, 4), 1:4+0.5, paste(c("coops", "condos", "luxury hotels", "comm. condos"), 
-                                   type.price$sale.n, sep=": "), adj=0, cex=1.5)
-    points(type.price$price.mean, 1:nrow(type.price), pch=16, col=2, cex=2)
-    points(type.price$price.median, 1:nrow(type.price),  pch=16, col=4, cex=2)
-    segments(type.price$price.mean, 1:nrow(type.price), 
-             type.price$price.median, 1:nrow(type.price),
-             lwd=2)    
-  })
-  
-  ## Panel 2: map of sales distribution
-  output$distPlot1 <- renderPlot({
-    count.df.sel=count.df
-    if(input$nbhd>0){
-      count.df.sel=count.df%>%
-        filter(region %in% zip.nbhd[[as.numeric(input$nbhd)]])
-    }
-    # make the map for selected neighhoods
-    
-    zip_choropleth(count.df.sel,
-                   title       = "2009 Manhattan housing sales",
-                   legend      = "Number of sales",
-                   county_zoom = 36061)
-  })
-  
-  ## Panel 3: leaflet
-  output$map <- renderLeaflet({
-    count.df.sel=count.df
-    if(input$nbhd>0){
-      count.df.sel=count.df%>%
-        filter(region %in% zip.nbhd[[as.numeric(input$nbhd)]])
-    }
-    
-    # From https://data.cityofnewyork.us/Business/Zip-Code-Boundaries/i8iw-xf4u/data
-    NYCzipcodes <- readOGR("../data/ZIP_CODE_040114.shp",
-                           #layer = "ZIP_CODE", 
-                           verbose = FALSE)
-    
-    selZip <- subset(NYCzipcodes, NYCzipcodes$ZIPCODE %in% count.df.sel$region)
-    
-    # ----- Transform to EPSG 4326 - WGS84 (required)
-    subdat<-spTransform(selZip, CRS("+init=epsg:4326"))
-    
-    # ----- save the data slot
-    subdat_data=subdat@data[,c("ZIPCODE", "POPULATION")]
-    subdat.rownames=rownames(subdat_data)
-    subdat_data=
-      subdat_data%>%left_join(count.df, by=c("ZIPCODE" = "region"))
-    rownames(subdat_data)=subdat.rownames
-    
-    # ----- to write to geojson we need a SpatialPolygonsDataFrame
-    subdat<-SpatialPolygonsDataFrame(subdat, data=subdat_data)
-    
-    # ----- set uo color pallette https://rstudio.github.io/leaflet/colors.html
-    # Create a continuous palette function
-    pal <- colorNumeric(
-      palette = "Blues",
-      domain = subdat$POPULATION
+    df <- myFunction(hospital_payment, input$sub)
+    colnames(df) <- c("region","value")
+    # df$region <- state.name[match(df$region,state.abb)]
+    df$region[is.na(df$region)] <- "DC"
+    #df$region <- tolower(df$region)
+    df$hover <- with(df, paste("state",region, '<br>', "value", value))
+    # give state boundaries a white border
+    l <- list(color = toRGB("white"), width = 2)
+    # specify some map projection/options
+    g <- list(
+      scope = 'usa',
+      projection = list(type = 'albers usa'),
+      showlakes = TRUE,
+      lakecolor = toRGB('white')
     )
-    
-    leaflet(subdat) %>%
-      addTiles()%>%
-      addPolygons(
-        stroke = T, weight=1,
-        fillOpacity = 0.6,
-        color = ~pal(POPULATION)
+    plot_geo(df, locationmode = 'USA-states') %>%
+      add_trace(
+        z = ~value, text = ~hover, locations = ~region,
+        color = ~value, colors = 'Blues'
+      ) %>%
+      colorbar(title = "Millions USD") %>%
+      layout(
+        geo = g
       )
   })
-})
+  
+########map###############
+  state<-reactive({state<-input$state})
+  type <- reactive({type <- input$type})
+  
+  care1 <- reactive({input$care1}) # Mortality
+  care2 <- reactive({input$care2}) # Safety of care
+  care3 <- reactive({input$care3}) # Readmission rate
+  care4 <- reactive({input$care4}) # Patient experience
+  care5 <- reactive({input$care5}) # Effectiveness of care
+  care6 <- reactive({input$care6}) # Timeliness of care
+  care7 <- reactive({input$care7}) # Efficient use of medical imaging
+  
+  v1<-reactive({
+    if (state() == "Select") {v1<-f%>%
+      filter(Mortality>=care1())%>%
+      filter(Safety>=care2())%>%
+      filter(Readmission>=care3())%>%
+      filter(Patient.experience>=care4())%>%
+      filter(Effectiveness>=care5())%>%
+      filter(Timeliness>=care6())%>%
+      filter(Efficient.use.of.medical.image>=care7())
+             } 
+    else {
+      selectstate<-state()
+      v1<- f %>% filter(Provider.State == state())%>%
+      filter(Mortality>=care1())%>%
+      filter(Safety>=care2())%>%
+      filter(Readmission>=care3())%>%
+      filter(Patient.experience>=care4())%>%
+      filter(Effectiveness>=care5())%>%
+      filter(Timeliness>=care6())%>%
+      filter(Efficient.use.of.medical.image>=care7())
+      }
+    })
+  
+  v2 <- reactive({
+    if (type() == "Select") {v2 <- v1()}
+    else{
+          selecttype <- type()
+          v2 <- v1() %>% filter(mdc == type())}})
+  
+  care.origin <- reactive(care.origin <- c(care1(),care2(),care3(),
+                                           care4(),care5(),care6(),care7()))
+  # Dataset for the selected state
+  data.state <- reactive(data.state <- v2())
+  
+  # Care vector for 7 criterion
+  care.vec <- reactive(as.numeric(care.origin()))
+  
+  # Scores of hospitals in the selected state
+  score <- reactive(apply(data.frame(data.state()),1,calScore,care.vec = care.vec()))
+  
+  # orders for hospitals
+  ord <- reactive(order(score(),decreasing = TRUE))
+  
+
+  
+  # ranks for hospitals
+  rk <- reactive(floor(frankv(score(),order = -1,ties.method = "min")))
+  
+  v3 <- reactive({v3 <- cbind(v2(),Order = ord(),Rank = rk())})
+  
+  #Icon for the markers
+  hospIcons <- iconList(emergency = makeIcon("emergency_icon.png", iconWidth = 25, iconHeight =30),
+                        critical = makeIcon("critical_icon.png", iconWidth = 25, iconHeight =30),
+                        children = makeIcon("children_icon.png", iconWidth = 20, iconHeight =30))
+  
+                        
+  output$intermap <- renderLeaflet({
+    content <- paste(sep = "<br/>",
+                     paste("<font size=4>","<font color=green>","<b>",v3()$Provider.Name,"</b>"),
+                     paste("<font size=1>","<font color=black>",v3()$Address),
+                     paste(v3()$City, v3()$State, v3()$ZIP.Code, sep = " "),  
+                     paste("(",substr(v3()[ ,"Phone.Number"],1,3),") ",substr(v3()[ ,"Phone.Number"],4,6),"-",substr(v3()[ ,"Phone.Number"],7,10),sep = ""), 
+                     paste("<b>","Hospital Type: ","</b>",as.character(v3()$Hospital.Type)),  
+                     paste("<b>","Hospital Ownership: ","</b>",as.character(v3()$Hospital.Ownership)), 
+                     paste("<b>","Provides Emergency Services: ","</b>",as.character(v3()[ ,"Emergency.Services"])),
+                     paste("<b>","Overall Rating: ","</b>", as.character(v3()[ ,"Hospital.overall.rating"])),
+                     paste("<b>","Personalized Ranking: ","</b>",v3()$Rank),
+                     paste("<b>","Average cost of chosen disease for each discharge: ", "</b>",as.character(v3()[ ,"averagepay_MDC_hos_per_discharge"])))
+    
+    
+    mapStates = map("state", fill = TRUE, plot = FALSE)
+    leaflet(data = mapStates) %>% 
+      addProviderTiles(providers$HikeBike.HikeBike) %>%
+      addMiniMap(
+        tiles = providers$Esri.WorldStreetMap,
+        toggleDisplay = TRUE,
+        position = 'bottomleft') %>%
+      addPolygons(stroke = T,color = 'grey',weight = 1,fillOpacity = 0,
+                  highlightOptions = highlightOptions(color = "black", weight = 2,bringToFront = TRUE)) %>%
+      addMarkers(v2()$lon, v2()$lat, popup = content, icon = hospIcons[v2()$TF], clusterOptions = markerClusterOptions())%>%
+      addEasyButton(easyButton(
+        icon="fa-globe", title="Zoom to Level 1",
+        onClick=JS("function(btn, map){ map.setZoom(1); }"))) %>%
+      addEasyButton(easyButton(
+        icon="fa-crosshairs", title="Locate Me",
+        onClick=JS("function(btn, map){ map.locate({setView: true}); }")))
+    })
+  output$tablerank = renderDataTable({
+    rankedtable <- cbind(v3()$Rank[ord()],v3()[ord(),c(2, 3, 4, 11,9)])
+    rankedtable$averagepay_MDC_hos_per_discharge <- apply(data.frame(rankedtable$averagepay_MDC_hos_per_discharge),1,payswitch)
+    colnames(rankedtable) <- c("Rank","Hospital Name","Address","City",
+                               "TEL","COST")
+    rankedtable
+  },options = list(orderClasses = TRUE, iDisplayLength = 5, lengthMenu = c(5, 10, 15, 20)))
+}
