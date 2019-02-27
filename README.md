@@ -3,13 +3,14 @@
 Term: Spring 2019
 
 + Team #Group 12
+
++ **Shiny App link**: [https://grandeur-wang.shinyapps.io/healthcare_intelligence/]( https://grandeur-wang.shinyapps.io/healthcare_intelligence/)
+
 + **Health Intelligence**: + Team members
 	+ team member 1 Cai, Zongbo (zc2455@columbia.edu)
 	+ team member 2 Li, Jingyue (jl5283@columbia.edu)
 	+ team member 3 Wang, Guanren (gw2380@columbia.edu)
 	+ team member 4 Zhong, Ming (mz2692@columbia.edu)
-
-+ **Shiny App link**: [https://grandeur-wang.shinyapps.io/healthcare_intelligence/]( https://grandeur-wang.shinyapps.io/healthcare_intelligence/)
 
 + **Project summary**: Since ancient times, people have faced the problem of being old and sick. Hospitals often play a very important role in this matter. There are many differences in the hospital. For example, some hospitals are good at surgery, and some hospitals are good at internal medicine. Therefore, how to choose a hospital suitable for patients becomes a key issue. Inspired by this problem, we combined the advantages of past projects and developed a software that allows patients to search for maps based on their type of illness and the needs of the hospital. To be more specific, the hospital's choice is determined by the patient's preference to mortality, safety of care, readmission rate, patient experience, effectiveness of care, timeliness of care and efficient use of medical imaging, and their type of disease. At the same time, we consider that price is also one of the important factors for patients to choose a hospital, so we also analyzed the estimated cost of medical, without insurance, in different states.
 
