@@ -1,7 +1,7 @@
 # Project 2: Shiny App Development Version 2.0
 ## Health Intelligence
 
-![image](figs/UI.png)
+![image](figs/screen_ui.png)
 
 Term: Spring 2019
 
