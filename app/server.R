@@ -15,6 +15,8 @@ library(rpart)
 library(plyr)
 library(choroplethr)
 library(shinydashboard)
+library(viridis)
+library(viridisLite)
 
 
 #####load##########
@@ -30,25 +32,20 @@ shinyServer <- function(input, output) {
 ##########plot 1##########
   output$HosNumByState <- renderPlotly({
     c <- ggplot(HosNumByState, aes(x = State, y = Freq)) +
-      geom_bar(stat = "identity", aes(fill = HosNumByState$Freq)) +
-      labs(title = "Hospital Number by State", x = "State", y = NULL) +
+      geom_bar(stat = "identity", aes(fill =Freq)) +
+      labs(title = "Number of Hospital by State", x = "State", y = NULL) +
       theme_classic()+
       theme(axis.text.x = element_text(angle = 90, size = 8)) +
       theme(plot.title = element_text(hjust = 0.5, vjust = 1)) +
       scale_y_continuous(expand = c(0,0)) +
+      scale_fill_viridis(name = "Frequency")+
       theme(plot.margin = unit(c(1,1,1,1), "cm"))
-    ggplotly(c) %>% layout(height = 700, width = 1000)
-    c + scale_fill_continuous(name = "Frequency")
+    ggplotly(c,height = 500, width = 1200)
   }
   )
 
   ##############plot2################
   output$map <- renderPlotly({
-    library(shiny)
-    library(plotly)  
-    library(dplyr)
-    library(plyr)
-    library(choroplethr)
     myFunction <- function(hospital, topic) {
       output <- hospital %>%
         filter(sub %in% as.vector(topic)) %>%
@@ -78,9 +75,9 @@ shinyServer <- function(input, output) {
     plot_geo(df, locationmode = 'USA-states') %>%
       add_trace(
         z = ~value, text = ~hover, locations = ~region,
-        color = ~value, colors = 'Blues'
+        color = ~value, colors = viridis(n=256)
       ) %>%
-      colorbar(title = "Millions USD") %>%
+      colorbar(title = "USD") %>%
       layout(
         geo = g
       )
@@ -118,9 +115,9 @@ shinyServer <- function(input, output) {
     plot_geo(df, locationmode = 'USA-states') %>%
       add_trace(
         z = ~value, text = ~hover, locations = ~region,
-        color = ~value, colors = 'Greens'
+        color = ~value, colors = viridis(n=256,option = 'B')
       ) %>%
-      colorbar(title = "Millions USD") %>%
+      colorbar(title = "USD") %>%
       layout(
         title = 'Ownership',
         geo = g
@@ -166,7 +163,6 @@ shinyServer <- function(input, output) {
   v2 <- reactive({
     if (type() == "Select") {v2 <- v1()}
     else{
-          selecttype <- type()
           v2 <- v1() %>% filter(mdc == type())}})
   
   care.origin <- reactive(care.origin <- c(care1(),care2(),care3(),
@@ -175,25 +171,29 @@ shinyServer <- function(input, output) {
   
   #define functions to give personalized ranking
   personal_rank <- function(data,care.vec){
+    if (is.na(data[1,1])) {data[1,]<-NA; data$score<-NA; data$rank<-NA}
+    else {
     # weight suggested for 7 criterion
-    origin.weight <- c(11,11,11,11,2,2,2) 
+    origin.weight <- c(11,11,11,11,2,2,2); 
     # care weight for 7 criterion
-    care.weight <- origin.weight*care.vec
+    care.weight <- origin.weight*care.vec;
     # hospital scores for 7 criterion
     criterion.score <- as.matrix(data%>%select(Mortality,Safety,Readmission,
                                                Patient.experience,Effectiveness,Timeliness,
-                                               Efficient.use.of.medical.image))
-    criterion.score[is.na(criterion.score)] <- 0
-
+                                               Efficient.use.of.medical.image));
+    criterion.score[is.na(criterion.score)] <- 0;
+    
     #criterion.score <- as.numeric(c(row[row[32:38]]))
-    score<-c()
+    score<-c();
     for (i in 1:length(criterion.score[,1])) {
       score[i] <- sum(care.weight*criterion.score[i,])
-    }
-    data$score<-score
-    data$rank<-frankv(data,cols = 'score',ties.method = 'dense',order=-1)
+    };
+    data$score<-score;
+    data$rank<-frankv(data,cols = 'score',ties.method = 'dense',order=-1);
     data<-data[order(data$score,decreasing = T),]
+    }
     return(data)
+    
   }
   
   # switch payment to dollar signs
@@ -226,8 +226,8 @@ shinyServer <- function(input, output) {
 
   
   # ranks for hospitals
+ v3<-reactive({v2<- personal_rank(v2(),care.vec())})
   
-  v3 <- reactive({v3 <- personal_rank(v2(),care.vec())})
   
   #Icon for the markers
   hospIcons <- iconList(emergency = makeIcon("emergency_icon.png", iconWidth = 25, iconHeight =30),
@@ -237,21 +237,21 @@ shinyServer <- function(input, output) {
                         
   output$intermap <- renderLeaflet({
     content <- paste(sep = "<br/>",
-                     paste("<font size=4>","<font color=red>","<b>",v3()$Provider.Name,"</b>"),
-                     paste("<font size=1>","<font color=black>",v3()$Address),
-                     paste(v3()$City, v3()$State, v3()$ZIP.Code, sep = " "),  
-                     paste("<b>","Tel: ","</b>","(",substr(v3()[ ,"Phone.Number"],1,3),") ",substr(v3()[ ,"Phone.Number"],4,6),"-",substr(v3()[ ,"Phone.Number"],7,10),sep = ""), 
-                     paste("<b>","Hospital Type: ","</b>",as.character(v3()$Hospital.Type)),  
-                     paste("<b>","Hospital Ownership: ","</b>",as.character(v3()$Hospital.Ownership)), 
-                     paste("<b>","Provides Emergency Services: ","</b>",as.character(v3()[ ,"Emergency.Services"])),
-                     paste("<b>","Overall Rating: ","</b>", as.character(v3()[ ,"Hospital.overall.rating"])),
-                     paste("<b>","Personalized Ranking: ","</b>",v3()$rank),
-                     paste("<b>","Average cost of chosen disease for each discharge: ", "</b>",as.character(v3()[ ,"averagepay_MDC_hos_per_discharge"])))
+                     paste("<font size=4>","<font color=red>","<b>",v2()$Provider.Name,"</b>"),
+                     paste("<font size=1>","<font color=black>",v2()$Address),
+                     paste(v2()$City, v2()$State, v2()$ZIP.Code, sep = " "),  
+                     paste("<b>","Tel: ","</b>","(",substr(v2()[ ,"Phone.Number"],1,3),") ",substr(v2()[ ,"Phone.Number"],4,6),"-",substr(v2()[ ,"Phone.Number"],7,10),sep = ""), 
+                     paste("<b>","Hospital Type: ","</b>",as.character(v2()$Hospital.Type)),  
+                     paste("<b>","Hospital Ownership: ","</b>",as.character(v2()$Hospital.Ownership)), 
+                     paste("<b>","Provides Emergency Services: ","</b>",as.character(v2()[ ,"Emergency.Services"])),
+                     paste("<b>","Overall Rating: ","</b>", as.character(v2()[ ,"Hospital.overall.rating"])),
+                     paste("<b>","Personalized Ranking: ","</b>",v3()$rank,"</b>","out of ","</b>",length(v3()$rank)),
+                     paste("<b>","Average cost of chosen disease for each discharge: ", "</b>",as.character(v2()[ ,"averagepay_MDC_hos_per_discharge"])))
     
     
     mapStates = map("state", fill = TRUE, plot = FALSE)
     leaflet(data = mapStates) %>% 
-      addProviderTiles(providers$HikeBike.HikeBike) %>%
+      addProviderTiles(providers$Esri.WorldStreetMap) %>%
       addMiniMap(
         tiles = providers$Esri.WorldStreetMap,
         toggleDisplay = TRUE,

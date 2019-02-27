@@ -12,7 +12,7 @@ library("ggthemes")
 library("formattable")
 library("base64enc")
 library("plotly")
-library(shinydashboard)
+library('shinydashboard')
 
 #devtools::install_github("timelyportfolio/parcoords")
 
@@ -36,47 +36,47 @@ tab1 <- tabPanel("Find Your Hospital",
                  leafletOutput("intermap",width="100%", height= "600px"),
                  absolutePanel(id = "controls", class ="City_Carrier_panel panel panel-default", fixed =F,
                                draggable =FALSE, top = 80, left = "auto", right = 20,
-                               bottom = "auto", width = 300, height = "auto",
-                               h2("Hospital Selection"),
+                               bottom = "auto", width = 320, height = "auto",
+                               h2("Preference Selection"),
                                selectInput("state", label = "State", 
                                            choices = c("Select","AL","AK","AZ","AR","CA","CO","CT","DE","FL","GA","HI","ID","IL","IN",
                                                        "IA","KS","KY","LA","ME","MD","MA","MI","MN","MS","MO","MT","NE","NV",
                                                        "NH","NJ","NM","NY","NC","ND","OH","OK","OR","PA","RI","SC","SD","TN",
                                                        "TX","UT","VT","VA","WA","WV","WI","WY"), selected = "Select"),
                                selectInput("type", label = "Disease Type",
-                                           choices = c("Nervous system" ,"Respir-atory System","Circul-atory System",
-                                                       "Digestive System" ,  "Hepato-biliary System & Pancreas"   ,
-                                                       "Muscul-osk-eletal System & Connective Tissue",
-                                                       "Skin, Subcut-aneous Tissue & Breast" ,
-                                                       " Endocrine, Nutrit-ional & Metabolic System" ,
+                                           choices = c("Nervous system" ,"Respiratory System","Circulatory System",
+                                                       "Digestive System" ,  "Hepatobiliary System & Pancreas"   ,
+                                                       "Musculoskeletal System & Connective Tissue",
+                                                       "Skin, Subcutaneous Tissue & Breast" ,
+                                                       " Endocrine, Nutritional & Metabolic System" ,
                                                        " Kidney & Urinary Tract" ,
-                                                       " Blood, Blood Forming Organs & Immuno-logical Disorders",
+                                                       " Blood, Blood Forming Organs & Immunological Disorders",
                                                        " Infectious & Parasitic Disease & Disorders"  ,
-                                                       " Mental Diseases & Disorders", "Alcoho-l/Drug Use or Induced Mental Disorders",
+                                                       " Mental Diseases & Disorders",
                                                        " Injuries, Poison & Toxic Effects of Drugs" ,
-                                                       " Factors influe-ncing Health Status",
+                                                       " Factors influencing Health Status",
                                                        "Ear, Nose, Mouth & Throat"), selected = "Ear, Nose, Mouth & Throat"),
                                radioButtons("care1",label = "Mortality",
                                             choices = list("Very Care"=3,"Care"=2,"Not Care"=1),
-                                            selected = 2, inline = T),
+                                            selected = 1, inline = T),
                                radioButtons("care2",label = "Safety of Care",
                                             choices = list("Very Care"=3,"Care"=2,"Not Care"=1),
-                                            selected = 2, inline = T),
+                                            selected = 1, inline = T),
                                radioButtons("care3",label = "Readmission Rate",
                                             choices = list("Very Care"=3,"Care"=2,"Not Care"=1),
-                                            selected = 2, inline = T),
+                                            selected = 1, inline = T),
                                radioButtons("care4",label = "Patient Experience",
                                             choices = list("Very Care"=3,"Care"=2,"Not Care"=1),
-                                            selected = 2, inline = T),
+                                            selected = 1, inline = T),
                                radioButtons("care5",label = "Effectiveness of Care",
                                             choices = list("Very Care"=3,"Care"=2,"Not Care"=1),
-                                            selected = 2, inline = T),
+                                            selected = 1, inline = T),
                                radioButtons("care6",label = "Timeliness of Care",
                                             choices = list("Very Care"=3,"Care"=2,"Not Care"=1),
-                                            selected = 2, inline = T),
+                                            selected = 1, inline = T),
                                radioButtons("care7",label = "Efficient Use of Medical Imaging",
                                             choices = list("Very Care"=3,"Care"=2,"Not Care"=1),
-                                            selected = 2, inline = T)),
+                                            selected = 1, inline = T)),
                  tabBox(width = 12,
                         tabPanel('Personalized Ranking',
                                  dataTableOutput("tablerank"),
@@ -85,28 +85,46 @@ tab1 <- tabPanel("Find Your Hospital",
           
 
 ##2.Descriptive Statistics -----
-tab2 <- navbarMenu("Hospital Statistics",
+tab2 <- navbarMenu("Find More Insights",
                   
-                   tabPanel(title = "Total Cost",
-                            h3("Total Cost (USD)",style="color:	black",align="center",offset = -1,astyle ="font-family:helvetica;"),
+                   tabPanel(title = "Total Cost By Disease Type",
+                            h3("Total Cost (USD) By MDC",style="color:	black",align="center",offset = -1,astyle ="font-family:helvetica;"),
                             fluidRow( wellPanel(style = "overflow-y:scroll;  height: 600px; opacity: 0.9; background-color: #ffffff;",
                                                 column(width = 9, plotlyOutput("map")),
                                                 column(width = 3,  selectInput("sub",
-                                                                               label = "Choose a the sub directory",
-                                                                               choices = unique(hospital$sub)),helpText("Select tyeps of dieases")))
+                                                                               label = "Select MDC (Disease Type)",
+                                                                               choices = unique(hospital$sub)),
+                                                       helpText('The Major Diagnostic Categories (MDC) are formed by dividing all 
+                                                                possible principal diagnoses (from ICD-9-CM) into 25 mutually exclusive 
+                                                                diagnosis areas. MDC codes, like diagnosis-related group (DRG) codes, 
+                                                                are primarily a claims and administrative data element unique to the 
+                                                                United States medical care reimbursement system. DRG codes also are mapped, 
+                                                                or grouped, into MDC codes.',
+                                                                br(),
+                                                                br(),
+                                                                'Obviously, charges vary with different MDC because 
+                                                                disparate disease need different degree of treatment.',
+                                                                br(),
+                                                                'Here,you can explore the discrepancy of average total cost between different ownerships.')
+                                                ))
                             )),
                    
-                   tabPanel(title = "Total Cost by Ownership",
-                            h3("Total Cost (USD)",style="color:	black",align="center",offset = -1,astyle ="font-family:helvetica;"),
+                   tabPanel(title = "Total Cost By Ownership",
+                            h3("Total Cost (USD) By Ownership",style="color:	black",align="center",offset = -1,astyle ="font-family:helvetica;"),
                             fluidRow( wellPanel(style = "overflow-y:scroll;  height: 600px; opacity: 0.9; background-color: #ffffff;",
                                                 column(width = 9, plotlyOutput("map1")),
                                                 column(width = 3,  selectInput("sub1",
-                                                                               label = "Choose a the sub directory",
-                                                                               choices = unique(hospital$Hospital.Ownership)),helpText("Select tyeps of dieases")))
+                                                                               label = "Select a type of Ownership",
+                                                                               choices = unique(hospital$Hospital.Ownership),
+                                                                               selected =  unique(hospital$Hospital.Ownership)[2]),
+                                                       helpText('Usually, charges vary with different sorts of ownership.',
+                                                                br(),
+                                                                'Here,you can explore the discrepancy of average total cost between different ownerships.')
+                                                       ))
                             )),
                    
-                   tabPanel(title = "Hospital Number",
-                            h3("Number of Hospitals",style="color:	black",align="center",offset = -1,astyle ="font-family:helvetica;"),
+                   tabPanel(title = "Number of Hospitals of Each State",
+                            h3("Number of Hospitals of Each State",style="color:	black",align="center",offset = -1,astyle ="font-family:helvetica;"),
                             fluidRow( wellPanel(style = "overflow-y:scroll;  height: 600px; opacity: 0.9; background-color: #ffffff;",
                                                 plotlyOutput("HosNumByState")))))
                                                
@@ -114,12 +132,18 @@ tab2 <- navbarMenu("Hospital Statistics",
 
 ##3.Insturction -----
 tab3 <-navbarMenu("Insturction",
-    tabPanel(title="Measurements",
+    tabPanel(title="Introduction",
                 fluidRow(
                   wellPanel(style = "overflow-y:scroll; height: 600px; opacity: 0.9; background-color: #ffffff;",
                             h1("Introduction"),
-                            p("Our group has created an app helping you to find the best hospitals based on your preference"),
-                            h1("Measurements"),
+                            p("Greetings! If you are thinking of finding a hospital you can go, 
+                              you can just save your time and look at our app. Our group has created an 
+                              app helping you to find the best hospitals around you based on your preference on 7 aspects
+                              of hospitals including mortality, safety of care, readmission rate, patient experience, 
+                              effectiveness of care, timeliness of care and efficient use of medical imaging. 
+                              With your choice. You can see what they measures respectively below. 
+                              It will be so easy to find the one fits you the best."),
+                            h3("Measurements"),
                             br(),
                             strong("Mortality:"),p("the death rate of patients"),
                             br(),
@@ -155,16 +179,17 @@ tab3 <-navbarMenu("Insturction",
              fluidRow(
                wellPanel(style = "overflow-y:scroll; height: 600px; opacity: 0.9; background-color: #ffffff;",
                          h1("Developers"),
+                         strong("Wang, Guanren, gw2380@columbia.edu"), br(),
+                         strong("Zhong, Ming, mz2692@columbia.edu"), br(),
                             strong("Cai, Zongbo, zc2455@columbia.edu"), br(),
-                            strong("Li, Jingyue, jl5283@columbia.edu"), br(),
-                            strong("Wang, Guanren, gw2380@columbia.edu"), br(),
-                            strong("Zhong, Ming, mz2692@columbia.edu")))))
+                            strong("Li, Jingyue, jl5283@columbia.edu")
+                            ))))
 
 
 
 
 ## UI 
-ui <- shinyUI(navbarPage(title = strong("Health Intelligence"),
+ui <- shinyUI(navbarPage(title = strong("Healthcare Intelligence"),
                          tab1,
                          tab2,
                          tab3

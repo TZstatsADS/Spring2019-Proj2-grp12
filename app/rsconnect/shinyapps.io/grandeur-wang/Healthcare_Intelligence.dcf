@@ -1,0 +1,12 @@
+name: Healthcare_Intelligence
+title: Healthcare_Intelligence
+username:
+account: grandeur-wang
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 737642
+bundleId: 1902812
+url: https://grandeur-wang.shinyapps.io/healthcare_intelligence/
+when: 1551252097.58606
+asMultiple: FALSE
+asStatic: FALSE
