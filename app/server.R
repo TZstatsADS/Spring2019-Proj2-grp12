@@ -189,7 +189,7 @@ shinyServer <- function(input, output) {
       score[i] <- sum(care.weight*criterion.score[i,])
     };
     data$score<-score;
-    data$rank<-frankv(data,cols = 'score',ties.method = 'dense',order=-1);
+    data$rank<-frankv(data,cols = 'score',ties.method = 'first',order=-1);
     data<-data[order(data$score,decreasing = T),]
     }
     return(data)
