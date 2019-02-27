@@ -1,5 +1,8 @@
 # Project 2: Shiny App Development Version 2.0
 ## Health Intelligence
+
+![image](figs/UI.png)
+
 Term: Spring 2019
 
 + Team #Group 12
